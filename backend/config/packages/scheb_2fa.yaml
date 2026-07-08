@@ -1,0 +1,5 @@
+scheb_two_factor:
+    totp:
+        enabled: true
+        issuer: CoPot
+        leeway: 30

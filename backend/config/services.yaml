@@ -1,0 +1,23 @@
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            string $frontendUrl: '%env(FRONTEND_URL)%'
+            int $passwordRotationDays: '%env(int:PASSWORD_ROTATION_DAYS)%'
+            string $googleClientId: '%env(GOOGLE_CLIENT_ID)%'
+            string $googleClientSecret: '%env(GOOGLE_CLIENT_SECRET)%'
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # Controllers are registered as services with the controller.service_arguments tag
+    App\Controller\:
+        resource: '../src/Controller/'
+        tags: ['controller.service_arguments']
