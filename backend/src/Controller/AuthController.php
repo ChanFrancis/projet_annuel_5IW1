@@ -217,7 +217,11 @@ class AuthController extends AbstractController
         return json_decode($request->getContent() ?: '{}', true) ?? [];
     }
 
-    /** @return array<int,array{field:string,message:string}> */
+    /**
+     * @param iterable<\Symfony\Component\Validator\ConstraintViolationInterface> $violations
+     *
+     * @return array<int,array{field:string,message:string}>
+     */
     private function formatViolations(iterable $violations): array
     {
         $out = [];

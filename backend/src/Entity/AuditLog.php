@@ -31,6 +31,7 @@ class AuditLog
     #[ORM\Column(length: 45, nullable: true)]
     private ?string $ip = null;
 
+    /** @var array<string,mixed>|null */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $context = null;
 
@@ -104,6 +105,7 @@ class AuditLog
         return $this;
     }
 
+    /** @return array<string,mixed>|null */
     public function getContext(): ?array
     {
         return $this->context;
