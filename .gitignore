@@ -3,8 +3,8 @@ result
 result-*
 .direnv/
 
-# Environment
-.env
+# Environment — `.env` (valeurs par défaut) EST versionné (convention Symfony).
+# Seuls les vrais secrets locaux sont ignorés :
 .env.local
 .env.*.local
 

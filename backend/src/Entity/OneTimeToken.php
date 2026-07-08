@@ -96,4 +96,9 @@ class OneTimeToken
     {
         return null === $this->usedAt && !$this->isExpired();
     }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 }
