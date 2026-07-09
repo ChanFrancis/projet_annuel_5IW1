@@ -7,3 +7,6 @@ coverage
 .env.*.local
 playwright-report
 test-results
+
+# TS incremental build info
+*.tsbuildinfo

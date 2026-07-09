@@ -15,7 +15,10 @@ export function AppLayout() {
           </Link>
           <nav className="flex items-center gap-4 text-sm">
             <Link to="/" className="hover:text-brand-600">
-              Tableau de bord
+              Comptes
+            </Link>
+            <Link to="/categories" className="hover:text-brand-600">
+              Catégories
             </Link>
             <span className="text-slate-400">{user?.email}</span>
             <button

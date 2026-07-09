@@ -63,6 +63,9 @@ services:
     volumes:
       - ./backend:/app
       - backend_vendor:/app/vendor
+      # var/ (cache, logs) lives in a named volume: avoids Windows bind-mount
+      # file-locking issues on `cache:clear` and is much faster.
+      - backend_var:/app/var
     ports:
       - "8000:8000"
     depends_on:
@@ -91,4 +94,5 @@ volumes:
   pgdata:
   redisdata:
   backend_vendor:
+  backend_var:
   frontend_node_modules:
