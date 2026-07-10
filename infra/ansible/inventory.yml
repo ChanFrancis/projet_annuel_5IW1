@@ -1,0 +1,12 @@
+# Ansible inventory.
+#
+# Copy to inventory.local.yml (git-ignored) and fill with your VPS details,
+# or put host vars in group_vars/all.yml (also git-ignored / vault-encrypted).
+
+all:
+  hosts:
+    copot-vps:
+      ansible_host: CHANGEME_VPS_IP_OR_DOMAIN
+      ansible_user: root          # first run: a user with sudo; later runs can use the copot deploy user
+      # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+      # ansible_port: 22
