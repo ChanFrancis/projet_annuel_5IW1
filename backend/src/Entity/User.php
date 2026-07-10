@@ -45,6 +45,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column]
     private bool $totpEnabled = false;
 
+    /** Suspended by an admin — login is refused but the account is kept. */
+    #[ORM\Column]
+    private bool $banned = false;
+
     #[ORM\Column]
     private \DateTimeImmutable $passwordChangedAt;
 
@@ -197,6 +201,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setTotpEnabled(bool $totpEnabled): self
     {
         $this->totpEnabled = $totpEnabled;
+
+        return $this;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned;
+    }
+
+    public function setBanned(bool $banned): self
+    {
+        $this->banned = $banned;
 
         return $this;
     }

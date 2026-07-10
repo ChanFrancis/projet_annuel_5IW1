@@ -28,4 +28,27 @@ class UserRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * @return User[]
+     */
+    public function findAllOrdered(int $limit = 100, int $offset = 0): array
+    {
+        return $this->createQueryBuilder('u')
+            ->orderBy('u.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** Number of users who still hold ROLE_ADMIN (used to guard the last admin). */
+    public function countAdmins(): int
+    {
+        $count = $this->getEntityManager()->getConnection()->fetchOne(
+            "SELECT COUNT(*) FROM users WHERE roles::jsonb @> '[\"ROLE_ADMIN\"]'::jsonb"
+        );
+
+        return (int) $count;
+    }
 }
