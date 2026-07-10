@@ -1,0 +1,33 @@
+# Version control & metadata
+.git
+.gitignore
+.github
+*.md
+!frontend/README.md
+!backend/README.md
+
+# Node / frontend build artifacts (recreated inside the image)
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+frontend/.cache
+frontend/coverage
+backend/vendor
+
+# Symfony runtime cache & local env
+backend/var
+backend/.env.local
+backend/.env.*.local
+backend/.env.test.local
+backend/config/jwt/*.pem
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Infra & local-only docs
+infra
+CLAUDE.md
+PLAN_ACTION.md
+Sprint.md
