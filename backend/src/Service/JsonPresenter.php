@@ -4,9 +4,12 @@ namespace App\Service;
 
 use App\Entity\Account;
 use App\Entity\AccountUser;
+use App\Entity\AuditLog;
+use App\Entity\Budget;
 use App\Entity\Category;
 use App\Entity\Invitation;
 use App\Entity\Transaction;
+use App\Entity\User;
 use App\Repository\TransactionRepository;
 
 /**
@@ -89,6 +92,48 @@ class JsonPresenter
             'role' => $i->getRole()->value,
             'status' => $i->getStatus()->value,
             'expiresAt' => $i->getExpiresAt()->format(\DateTimeInterface::ATOM),
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    public function budget(Budget $b): array
+    {
+        return [
+            'id' => (string) $b->getId(),
+            'accountId' => (string) $b->getAccount()->getId(),
+            'category' => $this->category($b->getCategory()),
+            'month' => $b->getMonth(),
+            'amount' => $b->getAmount(),
+            'createdAt' => $b->getCreatedAt()->format(\DateTimeInterface::ATOM),
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    public function adminUser(User $u): array
+    {
+        return [
+            'id' => (string) $u->getId(),
+            'email' => $u->getEmail(),
+            'roles' => $u->getRoles(),
+            'verified' => $u->isVerified(),
+            'banned' => $u->isBanned(),
+            'totpEnabled' => $u->isTotpAuthenticationEnabled(),
+            'createdAt' => $u->getCreatedAt()->format(\DateTimeInterface::ATOM),
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    public function auditLog(AuditLog $a): array
+    {
+        return [
+            'id' => (string) $a->getId(),
+            'userId' => $a->getUserId() ? (string) $a->getUserId() : null,
+            'action' => $a->getAction(),
+            'entity' => $a->getEntity(),
+            'entityId' => $a->getEntityId() ? (string) $a->getEntityId() : null,
+            'ip' => $a->getIp(),
+            'context' => $a->getContext(),
+            'createdAt' => $a->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];
     }
 }

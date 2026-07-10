@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/auth';
 
 export function AppLayout() {
   const user = useAuthStore((s) => s.user);
+  const isAdmin = useAuthStore((s) => s.isAdmin());
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
 
@@ -20,6 +21,11 @@ export function AppLayout() {
             <Link to="/categories" className="hover:text-brand-600">
               Catégories
             </Link>
+            {isAdmin && (
+              <Link to="/admin" className="hover:text-brand-600">
+                Administration
+              </Link>
+            )}
             <span className="text-slate-400">{user?.email}</span>
             <button
               onClick={() => {

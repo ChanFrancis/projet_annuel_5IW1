@@ -47,12 +47,17 @@ class Account
     #[ORM\OneToMany(targetEntity: Transaction::class, mappedBy: 'account', cascade: ['remove'])]
     private Collection $transactions;
 
+    /** @var Collection<int, Budget> */
+    #[ORM\OneToMany(targetEntity: Budget::class, mappedBy: 'account', cascade: ['remove'])]
+    private Collection $budgets;
+
     public function __construct()
     {
         $this->id = Uuid::v7();
         $this->createdAt = new \DateTimeImmutable();
         $this->members = new ArrayCollection();
         $this->transactions = new ArrayCollection();
+        $this->budgets = new ArrayCollection();
     }
 
     public function getId(): Uuid
@@ -152,5 +157,11 @@ class Account
     public function getTransactions(): Collection
     {
         return $this->transactions;
+    }
+
+    /** @return Collection<int, Budget> */
+    public function getBudgets(): Collection
+    {
+        return $this->budgets;
     }
 }

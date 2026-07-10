@@ -27,4 +27,33 @@ class AuditLogRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Filterable journal query for the admin panel.
+     *
+     * @param array{userId?: ?string, action?: ?string, from?: ?\DateTimeImmutable, to?: ?\DateTimeImmutable} $filters
+     *
+     * @return AuditLog[]
+     */
+    public function search(array $filters, int $limit = 200): array
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->orderBy('a.createdAt', 'DESC')
+            ->setMaxResults(min($limit, 500));
+
+        if (!empty($filters['action'])) {
+            $qb->andWhere('a.action = :action')->setParameter('action', $filters['action']);
+        }
+        if (!empty($filters['userId'])) {
+            $qb->andWhere('a.userId = :userId')->setParameter('userId', $filters['userId']);
+        }
+        if (!empty($filters['from'])) {
+            $qb->andWhere('a.createdAt >= :from')->setParameter('from', $filters['from']);
+        }
+        if (!empty($filters['to'])) {
+            $qb->andWhere('a.createdAt <= :to')->setParameter('to', $filters['to']);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }
