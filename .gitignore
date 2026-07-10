@@ -49,6 +49,16 @@ docker-compose.override.yml
 *.pem
 secrets/
 
+# Production environment (real secrets live here)
+backend/.env.prod.local
+.env.prod.local
+
+# Infra — Ansible vault & Backblaze rclone credentials
+infra/ansible/group_vars/all.yml
+infra/ansible/inventory.local.yml
+infra/backups/rclone.conf
+*.vault_pass
+
 # IA et documentation
 CLAUDE.md
 PLAN_ACTION.md
