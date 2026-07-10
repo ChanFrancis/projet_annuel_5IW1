@@ -51,6 +51,20 @@ export function AccountPage() {
           <p className="text-3xl font-bold tabular-nums">
             {data && formatMoney(data.account.balance, data.account.currency)}
           </p>
+          <div className="mt-2 flex justify-end gap-2 text-xs">
+            <Link
+              to={`/accounts/${id}/budgets`}
+              className="rounded bg-slate-100 px-3 py-1 hover:bg-slate-200"
+            >
+              Budgets
+            </Link>
+            <Link
+              to={`/accounts/${id}/statistics`}
+              className="rounded bg-slate-100 px-3 py-1 hover:bg-slate-200"
+            >
+              Statistiques
+            </Link>
+          </div>
         </div>
       </div>
 

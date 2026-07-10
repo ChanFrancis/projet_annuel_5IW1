@@ -8,8 +8,12 @@ import { MagicLinkPage } from '@/pages/MagicLinkPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AccountPage } from '@/pages/AccountPage';
 import { CategoriesPage } from '@/pages/CategoriesPage';
+import { BudgetsPage } from '@/pages/BudgetsPage';
+import { StatisticsPage } from '@/pages/StatisticsPage';
+import { AdminPage } from '@/pages/AdminPage';
 import { AcceptInvitationPage } from '@/pages/AcceptInvitationPage';
 import { AppLayout } from '@/components/AppLayout';
+import { AdminRoute } from '@/components/AdminRoute';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuth = useAuthStore((s) => s.isAuthenticated());
@@ -34,7 +38,17 @@ export default function App() {
       >
         <Route path="/" element={<DashboardPage />} />
         <Route path="/accounts/:id" element={<AccountPage />} />
+        <Route path="/accounts/:id/budgets" element={<BudgetsPage />} />
+        <Route path="/accounts/:id/statistics" element={<StatisticsPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminPage />
+            </AdminRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
