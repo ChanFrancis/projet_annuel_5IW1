@@ -17,6 +17,7 @@ interface AuthState {
   refresh: () => Promise<string | null>;
   logout: () => void;
   isAuthenticated: () => boolean;
+  isAdmin: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,6 +51,8 @@ export const useAuthStore = create<AuthState>()(
       logout: () => set({ token: null, refreshToken: null, user: null }),
 
       isAuthenticated: () => Boolean(get().token),
+
+      isAdmin: () => Boolean(get().user?.roles?.includes('ROLE_ADMIN')),
     }),
     { name: 'copot-auth' },
   ),
