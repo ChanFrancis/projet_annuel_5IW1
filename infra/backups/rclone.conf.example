@@ -1,0 +1,9 @@
+# Backblaze B2 remote for rclone. Copy to rclone.conf and fill in your keys.
+# rclone.conf is git-ignored. On the VPS this file is rendered by Ansible.
+#
+# Create a B2 "App Key" (bucket scope) in the Backblaze dashboard first.
+
+[backblaze]
+type = b2
+account = YOUR_B2_KEY_ID
+key = YOUR_B2_APPLICATION_KEY
