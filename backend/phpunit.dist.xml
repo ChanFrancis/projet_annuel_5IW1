@@ -7,13 +7,12 @@
     <php>
         <ini name="display_errors" value="1"/>
         <ini name="error_reporting" value="-1"/>
+        <!-- force=true overrides the container's real APP_ENV=dev, which
+             KernelTestCase reads from $_ENV before $_SERVER. -->
+        <env name="APP_ENV" value="test" force="true"/>
         <server name="APP_ENV" value="test" force="true"/>
         <server name="SHELL_VERBOSITY" value="-1"/>
-
-        <!-- ###+ symfony/framework-bundle ### -->
-        <env name="APP_ENV" value="dev"/>
-        <env name="APP_SECRET" value=""/>
-        <!-- ###- symfony/framework-bundle ### -->
+        <env name="APP_SECRET" value="test_secret" force="true"/>
 
         <!-- ###+ symfony/routing ### -->
         <!-- Configure how to generate URLs in non-HTTP contexts, such as CLI commands. -->
@@ -31,11 +30,8 @@
         <env name="DATABASE_URL" value="postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&amp;charset=utf8"/>
         <!-- ###- doctrine/doctrine-bundle ### -->
 
-        <!-- ###+ lexik/jwt-authentication-bundle ### -->
-        <env name="JWT_SECRET_KEY" value="%kernel.project_dir%/config/jwt/private.pem"/>
-        <env name="JWT_PUBLIC_KEY" value="%kernel.project_dir%/config/jwt/public.pem"/>
-        <env name="JWT_PASSPHRASE" value="47a539ddfb9d219339fb00ec36fbc688bcfe9a28c76f1952990a6eea347bbb0b"/>
-        <!-- ###- lexik/jwt-authentication-bundle ### -->
+        <!-- JWT key paths & passphrase come from .env / .env.local (local) or the
+             CI job env, so they always match the generated keypair. -->
 
         <!-- ###+ nelmio/cors-bundle ### -->
         <env name="CORS_ALLOW_ORIGIN" value="'^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'"/>

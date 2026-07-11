@@ -1,0 +1,43 @@
+// Front-end observability, all opt-in via env vars (inert when unset).
+// Both are dependency-free (injected <script>), in line with the project's
+// minimal-dependencies policy.
+//   - Sentry : error tracking via the official Loader Script (VITE_SENTRY_LOADER_URL)
+//   - Matomo : privacy-friendly analytics (VITE_MATOMO_URL + VITE_MATOMO_SITE_ID)
+
+export function initObservability(): void {
+  initSentry();
+  initMatomo();
+}
+
+// Sentry — official "Loader Script" (Sentry project → Settings → Client Keys →
+// Loader Script). Paste that URL into VITE_SENTRY_LOADER_URL to enable.
+function initSentry(): void {
+  const loaderUrl = import.meta.env.VITE_SENTRY_LOADER_URL;
+  if (!loaderUrl) return;
+
+  const script = document.createElement('script');
+  script.src = loaderUrl;
+  script.crossOrigin = 'anonymous';
+  script.async = true;
+  document.head.appendChild(script);
+}
+
+// Matomo — dependency-free tracker snippet, injected only when configured.
+function initMatomo(): void {
+  const url = import.meta.env.VITE_MATOMO_URL;
+  const siteId = import.meta.env.VITE_MATOMO_SITE_ID;
+  if (!url || !siteId) return;
+
+  const w = window as unknown as { _paq?: unknown[] };
+  const _paq = (w._paq = w._paq ?? []);
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  const base = url.endsWith('/') ? url : `${url}/`;
+  _paq.push(['setTrackerUrl', `${base}matomo.php`]);
+  _paq.push(['setSiteId', siteId]);
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `${base}matomo.js`;
+  document.head.appendChild(script);
+}

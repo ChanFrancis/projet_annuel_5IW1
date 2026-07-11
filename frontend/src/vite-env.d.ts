@@ -2,6 +2,9 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL: string;
+  readonly VITE_SENTRY_LOADER_URL?: string;
+  readonly VITE_MATOMO_URL?: string;
+  readonly VITE_MATOMO_SITE_ID?: string;
 }
 
 interface ImportMeta {
