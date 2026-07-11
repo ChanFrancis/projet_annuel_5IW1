@@ -327,6 +327,28 @@ function CsvSection({
   const [result, setResult] = useState<string | null>(null);
   const token = useAuthStore((s) => s.token);
 
+  // A plain <a href> can't send the JWT (Authorization header), so we fetch the
+  // CSV with the token, then trigger a client-side download from the blob.
+  async function onExport() {
+    const base = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+    const res = await fetch(`${base}/api/accounts/${accountId}/transactions/export`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      setResult("Échec de l'export.");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compte-${accountId}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   async function onImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -349,12 +371,12 @@ function CsvSection({
   return (
     <section className="rounded-xl border bg-white p-5">
       <h2 className="mb-3 font-semibold">Import / Export CSV</h2>
-      <a
-        href={transactionsApi.exportUrl(accountId)}
-        className="mb-3 block rounded bg-slate-100 px-3 py-2 text-center text-sm hover:bg-slate-200"
+      <button
+        onClick={onExport}
+        className="mb-3 block w-full rounded bg-slate-100 px-3 py-2 text-center text-sm hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
       >
         ⬇ Exporter en CSV
-      </a>
+      </button>
       {canEdit && (
         <label className="block cursor-pointer rounded border border-dashed px-3 py-2 text-center text-sm text-slate-500 hover:border-brand-400">
           {importing ? 'Import…' : '⬆ Importer un CSV'}

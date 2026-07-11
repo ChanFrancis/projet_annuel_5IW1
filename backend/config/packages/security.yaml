@@ -44,6 +44,7 @@ security:
         - { path: ^/api/auth/token/refresh, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/password, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/magic-link, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/google, roles: PUBLIC_ACCESS }
         - { path: ^/api/health, roles: PUBLIC_ACCESS }
         # Invitation preview is public (GET only); accept/decline still require auth.
         - { path: '^/api/invitations/[^/]+$', roles: PUBLIC_ACCESS, methods: [GET] }
