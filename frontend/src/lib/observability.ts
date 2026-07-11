@@ -4,8 +4,18 @@
 //   - Sentry : error tracking via the official Loader Script (VITE_SENTRY_LOADER_URL)
 //   - Matomo : privacy-friendly analytics (VITE_MATOMO_URL + VITE_MATOMO_SITE_ID)
 
+import { hasAnalyticsConsent } from '@/lib/consent';
+
 export function initObservability(): void {
   initSentry();
+  // Matomo (analytics) only loads once the user has consented (RGPD).
+  if (hasAnalyticsConsent()) {
+    initMatomo();
+  }
+}
+
+/** Called by the consent banner when the user accepts analytics. */
+export function enableAnalytics(): void {
   initMatomo();
 }
 

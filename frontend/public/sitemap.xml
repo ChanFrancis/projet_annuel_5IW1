@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://copot.local/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://copot.local/login</loc><changefreq>yearly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://copot.local/register</loc><changefreq>yearly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://copot.local/legal/cgu</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://copot.local/legal/cgv</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://copot.local/legal/confidentialite</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://copot.local/legal/cookies</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://copot.local/legal/contact</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+</urlset>

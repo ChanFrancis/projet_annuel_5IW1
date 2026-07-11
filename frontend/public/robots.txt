@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /register
+Allow: /legal/
+# Application privée : ne pas indexer les espaces authentifiés
+Disallow: /accounts/
+Disallow: /admin
+Disallow: /categories
+
+Sitemap: https://copot.local/sitemap.xml

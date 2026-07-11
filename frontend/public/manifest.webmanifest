@@ -1,0 +1,13 @@
+{
+  "name": "CoPot — Gestion de comptes",
+  "short_name": "CoPot",
+  "description": "Gérez et partagez vos comptes bancaires, opérations et budgets en toute sécurité.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "lang": "fr",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
