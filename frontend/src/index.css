@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light dark;
+  /* App entièrement en thème clair : on empêche le navigateur d'assombrir
+     les champs de formulaire en mode sombre de l'OS (bug texte noir sur noir). */
+  color-scheme: light;
 }
 
 body {

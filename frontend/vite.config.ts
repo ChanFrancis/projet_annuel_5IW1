@@ -13,6 +13,9 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // Bind-mount FS events don't reach the container's watcher on Windows/Docker,
+    // so HMR never fires. Polling makes file changes reliably detected.
+    watch: { usePolling: true, interval: 300 },
   },
   test: {
     globals: true,
