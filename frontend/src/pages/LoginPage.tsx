@@ -83,13 +83,13 @@ export function LoginPage() {
 
 export function AuthShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <main id="main-content" className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-xl border bg-white p-8 shadow-sm">
         <h1 className="mb-6 text-center text-2xl font-bold text-brand-600">CoPot</h1>
         <h2 className="mb-6 text-center text-lg font-semibold">{title}</h2>
         {children}
       </div>
-    </div>
+    </main>
   );
 }
 
