@@ -1,0 +1,30 @@
+# Non-secret example variables. Copy to group_vars/all.yml (git-ignored)
+# and adjust, then vault-encrypt the secret values:
+#   ansible-vault encrypt group_vars/all.yml
+
+# --- General ---
+copot_domain: copot.example.com
+copot_acme_email: admin@example.com
+copot_repo_url: "https://github.com/ChanFrancis/projet_annuel_5IW1.git"
+copot_repo_branch: main
+copot_deploy_root: /opt/copot
+copot_deploy_user: copot
+
+# --- Container registry (GHCR) ---
+copot_image_registry: "ghcr.io/chanfrancis"
+
+# --- Secrets (vault-encrypt these in all.yml) ---
+# copot_ghcr_token:        # PAT with read:packages, used for `docker login` on the VPS
+# copot_app_secret:        # Symfony APP_SECRET (64 random chars)
+# copot_jwt_passphrase:    # encrypts the JWT signing keypair
+# copot_postgres_user: copot
+# copot_postgres_password: # strong password
+# copot_postgres_db: copot
+# copot_mailer_dsn: "smtp://user:pass@smtp.example.com:587"
+# copot_google_client_id:
+# copot_google_client_secret:
+# copot_deploy_public_key: # authorized_key for the deploy user (CI uses the matching private key)
+# copot_ghcr_user:         # GitHub user/org for `docker login` (defaults to deploy user)
+# --- Backblaze B2 (off-site backup, "1" of the 3-2-1 policy) ---
+# copot_b2_key_id:
+# copot_b2_app_key:

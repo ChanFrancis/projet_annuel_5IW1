@@ -169,18 +169,58 @@ cd backend && vendor/bin/phpunit --coverage-html coverage/
 
 ## Déploiement (production)
 
-Le déploiement cible un **VPS Ubuntu 24.04** via Ansible + Docker Compose.
+Le déploiement cible un **VPS Ubuntu 24.04** via **Ansible** (provisioning) +
+**Docker Compose** (runtime) + **GitHub Actions** (CI/CD).
+
+**Stack production** : Traefik (reverse proxy + Let's Encrypt) → frontend (nginx
+SPA) et backend (FrankenPHP). PostgreSQL + Redis en réseau interne (non publiés).
+Le SPA est buildé avec `VITE_API_URL=/api` : les requêtes same-origin sont
+routées vers le backend par Traefik (`PathPrefix(/api)`).
+
+### Architecture
+
+```
+Internet ──443──▶ Traefik ──┬─ /api ─▶ backend (FrankenPHP :80)
+                            └─ /*   ─▶ frontend (nginx :80)
+Traefik : TLS auto (Let's Encrypt) + redirect HTTP→HTTPS
+backend ─▶ postgres, redis   (réseau interne uniquement)
+```
+
+### 1. Secrets GitHub (Settings → Secrets and variables → Actions)
+
+- `VPS_HOST`, `VPS_USER` (=`copot`), `VPS_PORT`, `VPS_SSH_KEY` (clé privée du user `copot`)
+- `GHCR_USER`, `GHCR_TOKEN` (PAT avec `write:packages`)
+
+### 2. Provisionner le VPS (Ansible)
 
 ```bash
-# Provisionner le VPS
 cd infra/ansible
-ansible-playbook -i inventory.yml playbook.yml
-
-# Build et push des images
-make build
-docker push registry.example.com/copot-frontend:latest
-docker push registry.example.com/copot-backend:latest
+cp group_vars/all.example.yml group_vars/all.yml   # remplir les secrets
+ansible-vault encrypt group_vars/all.yml
+cp inventory.yml inventory.local.yml               # renseigner l'hôte/VPS
+ansible-playbook -i inventory.local.yml playbook.yml --vault-password-file ~/.vault_pass
 ```
+
+Le playbook : apt upgrade, Docker, user `copot`, **UFW (ports 22/80/443 uniquement)**,
+`docker login` GHCR, déploiement Compose, et cron de sauvegarde 3-2-1.
+
+### 3. Pipeline CI/CD
+
+Tout `push` sur `main` déclenche [.github/workflows/deploy.yml](.github/workflows/deploy.yml) :
+
+1. Build des images prod (`target: prod`) → push vers `ghcr.io/<owner>/copot-{backend,frontend}:latest` (+ tag SHA)
+2. SSH sur le VPS → `compose pull` → `doctrine:migrations:migrate` → `compose up -d`
+
+Le workflow [.github/workflows/ci.yml](.github/workflows/ci.yml) (PHPStan, PHPUnit,
+lint, build frontend) reste le gate sur les PR.
+
+### Sauvegardes 3-2-1
+
+- `pg_dump` (custom format) + snapshot Redis, rotation locale (7 daily + 4 weekly)
+- Sync off-site vers **Backblaze B2** via `rclone` (cron nocturne posé par Ansible)
+- Scripts : [infra/backups/backup.sh](infra/backups/backup.sh) / [restore.sh](infra/backups/restore.sh)
+- Restaurer : `make restore FILE=/var/backups/copot/copot-*.dump`
+
 
 ## Troubleshooting
 

@@ -1,0 +1,21 @@
+{
+	# Reuse a pool of long-lived PHP workers for the Symfony front controller.
+	frankenphp {
+		worker /app/public/index.php 16
+	}
+}
+
+# Plain HTTP — TLS is terminated by Traefik in front of this container.
+:80 {
+	root * /app/public
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	php_server
+}

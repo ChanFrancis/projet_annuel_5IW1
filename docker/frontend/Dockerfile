@@ -11,13 +11,18 @@ ENV NODE_ENV=development
 CMD ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
 
 # ---------- Build ----------
+# VITE_API_URL is baked into the bundle at build time. Prod uses a relative
+# "/api" base so the SPA calls the backend same-origin (routed by Traefik).
 FROM base AS build
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=$VITE_API_URL
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
 # ---------- Prod (static served by nginx) ----------
+# Listens on :80 only — TLS is terminated by Traefik in front of this container.
 FROM nginx:1.27-alpine AS prod
 COPY docker/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html

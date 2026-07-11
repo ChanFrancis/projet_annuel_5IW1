@@ -1,0 +1,87 @@
+name: Deploy
+
+# Builds production images, pushes them to GitHub Container Registry,
+# then SSHs into the VPS to pull + migrate + restart the stack.
+#
+# Required repository secrets:
+#   VPS_HOST      e.g. copot.example.com (or the VPS IP)
+#   VPS_USER      deploy user on the VPS (default: copot)
+#   VPS_PORT      SSH port (default: 22)
+#   VPS_SSH_KEY   private SSH key for the deploy user
+#   GHCR_USER     GitHub username (or org) with package write access
+#   GHCR_TOKEN    a PAT with write:packages
+#
+# Repository variables (Settings → Variables):
+#   IMAGE_REGISTRY  e.g. ghcr.io/<owner>   (no trailing slash)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  build-and-push:
+    name: Build & push images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Set tags
+        id: tags
+        run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/backend/Dockerfile
+          target: prod
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/copot-backend:latest
+            ${{ env.REGISTRY }}/copot-backend:${{ steps.tags.outputs.sha }}
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/frontend/Dockerfile
+          target: prod
+          push: true
+          build-args: VITE_API_URL=/api
+          tags: |
+            ${{ env.REGISTRY }}/copot-frontend:latest
+            ${{ env.REGISTRY }}/copot-frontend:${{ steps.tags.outputs.sha }}
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/copot
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml run --rm backend php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
