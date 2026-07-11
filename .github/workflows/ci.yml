@@ -45,7 +45,10 @@ jobs:
           DATABASE_URL: postgresql://dev_user:dev_password@localhost:5432/copot_test?serverVersion=16
           JWT_PASSPHRASE: test
         run: |
-          php bin/console doctrine:migrations:migrate --no-interaction --env=test || true
+          # In the test env Doctrine appends a "_test" suffix (dbname_suffix),
+          # so the actual database is copot_test_test — create it before migrating.
+          php bin/console doctrine:database:create --env=test --if-not-exists
+          php bin/console doctrine:migrations:migrate --no-interaction --env=test
           vendor/bin/phpunit
 
   frontend:
