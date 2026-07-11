@@ -12,6 +12,7 @@ import { BudgetsPage } from '@/pages/BudgetsPage';
 import { StatisticsPage } from '@/pages/StatisticsPage';
 import { AdminPage } from '@/pages/AdminPage';
 import { AcceptInvitationPage } from '@/pages/AcceptInvitationPage';
+import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage';
 import { TermsPage, SalesPage, PrivacyPage, CookiesPage, ContactPage } from '@/pages/legal';
 import { AppLayout } from '@/components/AppLayout';
 import { AdminRoute } from '@/components/AdminRoute';
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/magic-link" element={<MagicLinkPage />} />
+        <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
         <Route path="/invitations/:token" element={<AcceptInvitationPage />} />
 
         {/* Public legal pages (RGPD) */}
