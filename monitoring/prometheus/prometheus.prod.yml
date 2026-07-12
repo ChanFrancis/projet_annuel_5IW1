@@ -1,0 +1,18 @@
+# Production scrape config.
+# Differs from prometheus.yml only in the backend target port: prod serves on
+# :80 (FrankenPHP via Caddy), not the dev php -S :8000.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # CoPot backend application metrics (Prometheus text exposition format).
+  - job_name: copot-backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend:80"]
