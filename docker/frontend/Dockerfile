@@ -11,10 +11,11 @@ ENV NODE_ENV=development
 CMD ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
 
 # ---------- Build ----------
-# VITE_API_URL is baked into the bundle at build time. Prod uses a relative
-# "/api" base so the SPA calls the backend same-origin (routed by Traefik).
+# VITE_API_URL is baked into the bundle at build time. Prod uses an EMPTY base
+# (same-origin): resource paths in src/api/resources.ts already start with
+# "/api", so a "/api" base here would produce double "/api/api/…" requests.
 FROM base AS build
-ARG VITE_API_URL=/api
+ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
