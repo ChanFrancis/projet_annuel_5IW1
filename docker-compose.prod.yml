@@ -12,7 +12,7 @@ name: copot-prod
 
 services:
   traefik:
-    image: traefik:v3.2
+    image: traefik:v3.7.7
     restart: unless-stopped
     command:
       - --providers.docker=true
