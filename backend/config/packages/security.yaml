@@ -21,7 +21,7 @@ security:
                 check_path: /api/auth/login
                 username_path: email
                 password_path: password
-                success_handler: lexik_jwt_authentication.handler.authentication_success
+                success_handler: App\Security\TwoFactorAwareSuccessHandler
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
             login_throttling:
                 max_attempts: 5          # per minute, per IP+username
@@ -45,6 +45,8 @@ security:
         - { path: ^/api/auth/password, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/magic-link, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/google, roles: PUBLIC_ACCESS }
+        # Second step of password login (TOTP) — user not fully authenticated yet.
+        - { path: ^/api/auth/2fa/verify, roles: PUBLIC_ACCESS }
         - { path: ^/api/health, roles: PUBLIC_ACCESS }
         # Invitation preview is public (GET only); accept/decline still require auth.
         - { path: '^/api/invitations/[^/]+$', roles: PUBLIC_ACCESS, methods: [GET] }

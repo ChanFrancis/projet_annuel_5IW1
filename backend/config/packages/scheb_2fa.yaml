@@ -2,4 +2,6 @@ scheb_two_factor:
     totp:
         enabled: true
         issuer: CoPot
-        leeway: 30
+        # Tolerance window (seconds). MUST be strictly lower than the TOTP period
+        # (30s), otherwise otphp throws "leeway must be lower than the period".
+        leeway: 10

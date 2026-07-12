@@ -23,6 +23,9 @@ export function AppLayout() {
             <Link to="/categories" className="hover:text-brand-600">
               Catégories
             </Link>
+            <Link to="/settings/security" className="hover:text-brand-600">
+              Sécurité
+            </Link>
             {isAdmin && (
               <Link to="/admin" className="hover:text-brand-600">
                 Administration
