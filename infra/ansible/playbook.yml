@@ -37,6 +37,11 @@
         name: "{{ copot_deploy_user }}"
         state: present
 
+    - name: Ensure docker group exists (user is added before docker-ce is installed)
+      ansible.builtin.group:
+        name: docker
+        state: present
+
     - name: Ensure deploy user exists
       ansible.builtin.user:
         name: "{{ copot_deploy_user }}"
@@ -51,6 +56,15 @@
         user: "{{ copot_deploy_user }}"
         state: present
         key: "{{ copot_deploy_public_key }}"
+
+    - name: Allow deploy user passwordless sudo (needed for become over SSH/CI)
+      ansible.builtin.copy:
+        dest: "/etc/sudoers.d/{{ copot_deploy_user }}"
+        content: "{{ copot_deploy_user }} ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: '0440'
+        validate: /usr/sbin/visudo -csf %s
 
     # ---------- Docker ----------
     - name: Add Docker GPG key
@@ -179,6 +193,14 @@
         owner: "{{ copot_deploy_user }}"
         group: "{{ copot_deploy_user }}"
         mode: '0750'
+
+    - name: Ensure rclone config dir exists
+      ansible.builtin.file:
+        path: "/home/{{ copot_deploy_user }}/.config/rclone"
+        state: directory
+        owner: "{{ copot_deploy_user }}"
+        group: "{{ copot_deploy_user }}"
+        mode: '0700'
 
     - name: Render rclone config
       ansible.builtin.template:

@@ -11,7 +11,7 @@ copot_deploy_root: /opt/copot
 copot_deploy_user: copot
 
 # --- Container registry (GHCR) ---
-copot_image_registry: "ghcr.io/chanfrancis"
+copot_image_registry: "ghcr.io/harkansky"
 
 # --- Secrets (vault-encrypt these in all.yml) ---
 # copot_ghcr_token:        # PAT with read:packages, used for `docker login` on the VPS
