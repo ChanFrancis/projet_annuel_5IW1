@@ -64,7 +64,10 @@ jobs:
           file: docker/frontend/Dockerfile
           target: prod
           push: true
-          build-args: VITE_API_URL=/api
+          # Empty on purpose: resource paths in src/api/resources.ts already
+          # start with "/api", so the base must be "" in prod (same-origin).
+          # Setting "/api" here caused "/api/api/…" (double prefix) requests.
+          build-args: VITE_API_URL=
           tags: |
             ${{ steps.registry.outputs.name }}/copot-frontend:latest
             ${{ steps.registry.outputs.name }}/copot-frontend:${{ steps.tags.outputs.sha }}

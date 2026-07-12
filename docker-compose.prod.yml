@@ -1,8 +1,9 @@
 # CoPot — production stack.
 #
 # Edge = Traefik (TLS termination + automatic Let's Encrypt).
-# The SPA is built with VITE_API_URL=/api, so same-origin requests are routed
-# to the backend by the PathPrefix(`/api`) rule below.
+# The SPA is built with an empty VITE_API_URL (resource paths already include
+# "/api"), so same-origin requests are routed to the backend by the
+# PathPrefix(`/api`) rule below.
 #
 # Usage:
 #   cp backend/.env.prod.example backend/.env.prod.local   # fill real secrets
