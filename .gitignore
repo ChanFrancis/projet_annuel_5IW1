@@ -61,5 +61,6 @@ infra/backups/rclone.conf
 
 # IA et documentation
 CLAUDE.md
+DEPLOY_GUIDE.md
 PLAN_ACTION.md
 Sprint.md
