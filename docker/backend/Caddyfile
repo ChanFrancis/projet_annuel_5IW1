@@ -1,11 +1,11 @@
-{
-	# Reuse a pool of long-lived PHP workers for the Symfony front controller.
-	frankenphp {
-		worker /app/public/index.php 16
-	}
-}
-
 # Plain HTTP — TLS is terminated by Traefik in front of this container.
+#
+# NOTE: no `frankenphp { worker ... }` block. Worker mode requires a dedicated
+# bootstrap that loops on frankenphp_handle_request(); the standard Symfony
+# public/index.php is a single-request front controller, so pointing a worker
+# at it makes FrankenPHP's readiness self-check fail ("worker has not reached
+# frankenphp_handle_request()") and the container restarts in a loop.
+# php_server runs index.php per request — correct and stable.
 :80 {
 	root * /app/public
 	encode zstd gzip
