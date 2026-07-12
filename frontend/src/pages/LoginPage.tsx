@@ -5,17 +5,22 @@ import { useAuthStore, AuthUser } from '@/store/auth';
 
 const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
-interface LoginResponse {
+interface SessionResponse {
   token: string;
   refresh_token: string;
   user: AuthUser;
 }
+
+type LoginResponse = SessionResponse | { twoFactorRequired: true; mfaToken: string };
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // When the account has 2FA, we hold the intermediate token and ask for a code.
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [code, setCode] = useState('');
   const setSession = useAuthStore((s) => s.setSession);
   const navigate = useNavigate();
 
@@ -25,19 +30,78 @@ export function LoginPage() {
     setLoading(true);
     try {
       const data = await api.post<LoginResponse>('/api/auth/login', { email, password }, { auth: false });
-      setSession(data.token, data.refresh_token, data.user);
-      navigate('/');
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        setError('Identifiants invalides.');
+      if ('twoFactorRequired' in data) {
+        setMfaToken(data.mfaToken);
       } else {
-        setError('Une erreur est survenue.');
+        setSession(data.token, data.refresh_token, data.user);
+        navigate('/');
       }
+    } catch (err) {
+      setError(err instanceof ApiError && err.status === 401 ? 'Identifiants invalides.' : 'Une erreur est survenue.');
     } finally {
       setLoading(false);
     }
   }
 
+  async function onVerify(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const data = await api.post<SessionResponse>(
+        '/api/auth/2fa/verify',
+        { mfaToken, code },
+        { auth: false },
+      );
+      setSession(data.token, data.refresh_token, data.user);
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof ApiError && err.status === 401 ? 'Code invalide ou expiré.' : 'Une erreur est survenue.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Step 2: two-factor code.
+  if (mfaToken) {
+    return (
+      <AuthShell title="Vérification en deux étapes">
+        <form onSubmit={onVerify} className="space-y-4">
+          <p className="text-center text-sm text-slate-600">
+            Saisissez le code à 6 chiffres de votre application d'authentification.
+          </p>
+          <Field
+            label="Code de vérification"
+            type="text"
+            value={code}
+            onChange={setCode}
+            autoComplete="one-time-code"
+            inputMode="numeric"
+          />
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading || code.length < 6}
+            className="w-full rounded bg-brand-600 py-2 font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+          >
+            {loading ? '…' : 'Vérifier'}
+          </button>
+        </form>
+        <button
+          onClick={() => {
+            setMfaToken(null);
+            setCode('');
+            setError(null);
+          }}
+          className="mt-4 w-full text-center text-sm text-slate-500 hover:text-brand-600"
+        >
+          ← Retour
+        </button>
+      </AuthShell>
+    );
+  }
+
+  // Step 1: email + password.
   return (
     <AuthShell title="Connexion">
       <form onSubmit={onSubmit} className="space-y-4">
@@ -99,12 +163,14 @@ export function Field({
   value,
   onChange,
   autoComplete,
+  inputMode,
 }: {
   label: string;
   type: string;
   value: string;
   onChange: (v: string) => void;
   autoComplete?: string;
+  inputMode?: 'numeric' | 'text' | 'email';
 }) {
   return (
     <label className="block">
@@ -113,6 +179,7 @@ export function Field({
         type={type}
         value={value}
         autoComplete={autoComplete}
+        inputMode={inputMode}
         onChange={(e) => onChange(e.target.value)}
         required
         className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"

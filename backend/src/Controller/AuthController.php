@@ -8,7 +8,9 @@ use App\Repository\OneTimeTokenRepository;
 use App\Repository\UserRepository;
 use App\Service\AuditLogger;
 use App\Service\MailService;
+use App\Service\MfaChallengeStore;
 use App\Validator\StrongPassword;
+use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Totp\TotpAuthenticatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Gesdinet\JWTRefreshTokenBundle\Generator\RefreshTokenGeneratorInterface;
 use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
@@ -79,6 +81,32 @@ class AuthController extends AbstractController
             'totpEnabled' => $user->isTotpEnabled(),
             'passwordExpired' => $user->isPasswordExpired(),
         ]);
+    }
+
+    /**
+     * Second step of a password login when 2FA is enabled: exchange the
+     * short-lived mfaToken + TOTP code for a real JWT session.
+     */
+    #[Route('/2fa/verify', name: 'auth_2fa_verify', methods: ['POST'])]
+    public function verifyTwoFactor(Request $request, MfaChallengeStore $mfa, TotpAuthenticatorInterface $totp): JsonResponse
+    {
+        $data = $this->decode($request);
+        $mfaToken = (string) ($data['mfaToken'] ?? '');
+        $code = (string) ($data['code'] ?? '');
+
+        $userId = $mfa->resolve($mfaToken);
+        if (!$userId) {
+            return $this->json(['error' => 'Session 2FA expirée, reconnectez-vous.'], 401);
+        }
+        $user = $this->users->find($userId);
+        if (!$user || !$totp->checkCode($user, $code)) {
+            return $this->json(['error' => 'Code invalide.'], 401);
+        }
+
+        $mfa->invalidate($mfaToken);
+        $this->audit->log('user.login_2fa_success', $user->getId());
+
+        return $this->json($this->issueSession($user));
     }
 
     // ---- Password reset ----

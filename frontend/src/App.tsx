@@ -13,6 +13,7 @@ import { StatisticsPage } from '@/pages/StatisticsPage';
 import { AdminPage } from '@/pages/AdminPage';
 import { AcceptInvitationPage } from '@/pages/AcceptInvitationPage';
 import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage';
+import { SecuritySettingsPage } from '@/pages/SecuritySettingsPage';
 import { TermsPage, SalesPage, PrivacyPage, CookiesPage, ContactPage } from '@/pages/legal';
 import { AppLayout } from '@/components/AppLayout';
 import { AdminRoute } from '@/components/AdminRoute';
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/accounts/:id/budgets" element={<BudgetsPage />} />
           <Route path="/accounts/:id/statistics" element={<StatisticsPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
+          <Route path="/settings/security" element={<SecuritySettingsPage />} />
           <Route
             path="/admin"
             element={

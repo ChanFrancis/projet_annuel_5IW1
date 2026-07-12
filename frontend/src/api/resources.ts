@@ -116,6 +116,13 @@ export const statsApi = {
       .then((r) => r.categories),
 };
 
+// ---- Two-factor (TOTP) ----
+export const twoFactorApi = {
+  setup: () => api.post<{ secret: string; provisioningUri: string }>('/api/auth/2fa/setup'),
+  enable: (code: string) => api.post<{ message: string }>('/api/auth/2fa/enable', { code }),
+  disable: (code: string) => api.post<{ message: string }>('/api/auth/2fa/disable', { code }),
+};
+
 // ---- Admin ----
 export const adminApi = {
   listUsers: () => api.get<{ users: AdminUser[] }>('/api/admin/users').then((r) => r.users),
