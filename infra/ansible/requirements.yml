@@ -1,0 +1,7 @@
+---
+# Ansible collections required by playbook.yml.
+# Install before first run:
+#   ansible-galaxy collection install -r requirements.yml
+collections:
+  - name: ansible.posix      # authorized_key (deploy user SSH access)
+  - name: community.general  # ufw (firewall: ports 22/80/443 only)

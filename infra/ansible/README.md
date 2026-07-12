@@ -7,6 +7,9 @@ and the full Docker Compose stack.
 ## Setup
 
 ```bash
+# 0. Required collections (authorized_key, ufw)
+ansible-galaxy collection install -r requirements.yml
+
 # 1. Host + secrets (git-ignored)
 cp group_vars/all.example.yml group_vars/all.yml
 $EDITOR group_vars/all.yml          # fill secrets, especially copot_deploy_public_key
