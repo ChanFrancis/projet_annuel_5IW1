@@ -161,7 +161,7 @@
         mode: '0600'
 
     - name: Pull images
-      ansible.builtin.command: docker compose --env-file .env.prod -f docker-compose.prod.yml pull
+      ansible.builtin.command: docker compose --env-file .env.prod -f docker-compose.prod.yml --profile monitoring pull
       args:
         chdir: "{{ copot_deploy_root }}"
       become_user: "{{ copot_deploy_user }}"
@@ -175,7 +175,7 @@
       become_user: "{{ copot_deploy_user }}"
 
     - name: Start the stack
-      ansible.builtin.command: docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --remove-orphans
+      ansible.builtin.command: docker compose --env-file .env.prod -f docker-compose.prod.yml --profile monitoring up -d --remove-orphans
       args:
         chdir: "{{ copot_deploy_root }}"
       become_user: "{{ copot_deploy_user }}"

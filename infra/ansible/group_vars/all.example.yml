@@ -25,6 +25,9 @@ copot_image_registry: "ghcr.io/harkansky"
 # copot_google_client_secret:
 # copot_deploy_public_key: # authorized_key for the deploy user (CI uses the matching private key)
 # copot_ghcr_user:         # GitHub user/org for `docker login` (defaults to deploy user)
+# --- Observability (Grafana admin login, reached via SSH local-forward) ---
+# copot_grafana_user: copot
+# copot_grafana_password:
 # --- Backblaze B2 (off-site backup, "1" of the 3-2-1 policy) ---
 # copot_b2_key_id:
 # copot_b2_app_key:

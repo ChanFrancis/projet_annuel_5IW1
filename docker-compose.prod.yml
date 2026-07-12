@@ -108,6 +108,43 @@ services:
       retries: 5
     networks: [internal]
 
+  # Observability — opt-in: `docker compose --profile monitoring up -d`.
+  # Bound to the VPS loopback (127.0.0.1) only, so the ports are reachable
+  # via an SSH local-forward from your laptop (`ssh -L 3000:localhost:3000
+  # -L 9090:localhost:9090 copot@$VPS`) but invisible to UFW / the outside
+  # world. Services join `internal` so Prometheus can scrape the backend.
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      # Prod scrape target is backend:80 (FrankenPHP), not the dev php -S :8000.
+      - ./monitoring/prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks: [internal]
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    environment:
+      # Fail-closed: no admin/admin default in prod (matches ${VAR:?...} convention).
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:?GRAFANA_USER must be set}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD must be set}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    networks: [internal]
+
 networks:
   edge:
   internal:
@@ -119,3 +156,5 @@ volumes:
   jwt:
   backend_var:
   letsencrypt:
+  prometheus_data:
+  grafana_data:
