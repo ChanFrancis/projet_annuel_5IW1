@@ -11,12 +11,22 @@ ENV NODE_ENV=development
 CMD ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
 
 # ---------- Build ----------
-# VITE_API_URL is baked into the bundle at build time. Prod uses an EMPTY base
-# (same-origin): resource paths in src/api/resources.ts already start with
-# "/api", so a "/api" base here would produce double "/api/api/…" requests.
+# All VITE_* are baked into the bundle at build time, so they must be provided
+# as build args. VITE_API_URL: prod uses an EMPTY base (same-origin) — resource
+# paths in src/api/resources.ts already start with "/api", so a "/api" base here
+# would produce double "/api/api/…" requests.
+# Observability (optional — leave empty to disable):
+#   VITE_MATOMO_URL / VITE_MATOMO_SITE_ID : self-hosted Matomo analytics
+#   VITE_SENTRY_LOADER_URL                : Sentry error tracking (Loader Script)
 FROM base AS build
 ARG VITE_API_URL=
-ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_MATOMO_URL=
+ARG VITE_MATOMO_SITE_ID=
+ARG VITE_SENTRY_LOADER_URL=
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_MATOMO_URL=$VITE_MATOMO_URL \
+    VITE_MATOMO_SITE_ID=$VITE_MATOMO_SITE_ID \
+    VITE_SENTRY_LOADER_URL=$VITE_SENTRY_LOADER_URL
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 COPY frontend/ ./
