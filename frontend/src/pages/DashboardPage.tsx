@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { accountsApi } from '@/api/resources';
 import { ACCOUNT_TYPES, formatMoney, type AccountType } from '@/lib/types';
+import { trackEvent } from '@/lib/observability';
 
 export function DashboardPage() {
   const qc = useQueryClient();
@@ -44,7 +45,12 @@ export function DashboardPage() {
           )}
         </div>
         <button
-          onClick={() => setShowForm((v) => !v)}
+          onClick={() =>
+            setShowForm((v) => {
+              if (!v) trackEvent('Account', 'click_new_account_button', 'dashboard');
+              return !v;
+            })
+          }
           className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
         >
           {showForm ? 'Annuler' : '+ Nouveau compte'}
