@@ -51,3 +51,14 @@ function initMatomo(): void {
   script.src = `${base}matomo.js`;
   document.head.appendChild(script);
 }
+
+/**
+ * Track a custom Matomo event (e.g. a button click).
+ * No-op if Matomo isn't active yet (not configured, or consent not given):
+ * `_paq` only exists once initMatomo() has run post-consent, so this respects RGPD.
+ */
+export function trackEvent(category: string, action: string, name?: string): void {
+  const w = window as unknown as { _paq?: unknown[] };
+  if (!w._paq) return;
+  w._paq.push(name ? ['trackEvent', category, action, name] : ['trackEvent', category, action]);
+}

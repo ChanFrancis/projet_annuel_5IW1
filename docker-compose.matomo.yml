@@ -1,0 +1,53 @@
+# CoPot — Matomo (analytique auto-hébergée), à déployer À CÔTÉ de la stack app.
+#
+# Lancer :
+#   docker compose -f docker-compose.matomo.yml up -d
+# Puis ouvrir http://localhost:8090 et suivre l'assistant d'installation.
+#
+# Ensuite, dans le build du frontend :
+#   VITE_MATOMO_URL=http://localhost:8090/
+#   VITE_MATOMO_SITE_ID=1
+#
+# Mots de passe : surcharge-les via un .env ou en ligne de commande pour la prod.
+
+name: copot-matomo
+
+services:
+  matomo-db:
+    image: mariadb:11
+    restart: unless-stopped
+    command: --max-allowed-packet=64MB
+    environment:
+      MARIADB_DATABASE: matomo
+      MARIADB_USER: matomo
+      MARIADB_PASSWORD: ${MATOMO_DB_PASSWORD:-matomo_pass}
+      MARIADB_ROOT_PASSWORD: ${MATOMO_DB_ROOT_PASSWORD:-root_pass}
+    volumes:
+      - matomo_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  matomo:
+    image: matomo:apache
+    restart: unless-stopped
+    depends_on:
+      matomo-db:
+        condition: service_healthy
+    environment:
+      MATOMO_DATABASE_HOST: matomo-db
+      MATOMO_DATABASE_ADAPTER: mysql
+      MATOMO_DATABASE_TABLES_PREFIX: matomo_
+      MATOMO_DATABASE_USERNAME: matomo
+      MATOMO_DATABASE_PASSWORD: ${MATOMO_DB_PASSWORD:-matomo_pass}
+      MATOMO_DATABASE_DBNAME: matomo
+    volumes:
+      - matomo_app:/var/www/html
+    ports:
+      - "8090:80"
+
+volumes:
+  matomo_db:
+  matomo_app:
