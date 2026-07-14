@@ -1,0 +1,77 @@
+# Override prod : expose Grafana + Matomo sur des sous-domaines copot.fr via Traefik.
+# À utiliser EN PLUS du compose prod :
+#   docker compose --env-file .env.prod \
+#     -f docker-compose.prod.yml -f docker-compose.copot-public.prod.yml \
+#     --profile monitoring up -d prometheus grafana matomo-db matomo
+#
+# Prometheus reste interne (pas d'auth) — Grafana l'interroge sur le réseau internal.
+
+name: copot-prod
+
+services:
+  # Rend Grafana accessible publiquement sur grafana.copot.fr (le binding
+  # loopback 127.0.0.1:3000 du compose de base reste, le tunnel SSH marche aussi).
+  grafana:
+    environment:
+      GF_SERVER_ROOT_URL: https://grafana.copot.fr
+    networks:
+      - internal
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.rule=Host(`grafana.copot.fr`)
+      - traefik.http.routers.grafana.entrypoints=websecure
+      - traefik.http.routers.grafana.tls=true
+      - traefik.http.routers.grafana.tls.certresolver=le
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+
+  matomo-db:
+    image: mariadb:11
+    restart: unless-stopped
+    command: --max-allowed-packet=64MB
+    environment:
+      MARIADB_DATABASE: matomo
+      MARIADB_USER: matomo
+      MARIADB_PASSWORD: ${MATOMO_DB_PASSWORD:-matomo_pass}
+      MARIADB_ROOT_PASSWORD: ${MATOMO_DB_ROOT_PASSWORD:-root_pass}
+    volumes:
+      - matomo_db:/var/lib/mysql
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  matomo:
+    image: matomo:apache
+    restart: unless-stopped
+    depends_on:
+      matomo-db:
+        condition: service_healthy
+    environment:
+      MATOMO_DATABASE_HOST: matomo-db
+      MATOMO_DATABASE_ADAPTER: mysql
+      MATOMO_DATABASE_TABLES_PREFIX: matomo_
+      MATOMO_DATABASE_USERNAME: matomo
+      MATOMO_DATABASE_PASSWORD: ${MATOMO_DB_PASSWORD:-matomo_pass}
+      MATOMO_DATABASE_DBNAME: matomo
+    volumes:
+      - matomo_app:/var/www/html
+    networks: [edge, internal]
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.matomo.rule=Host(`matomo.copot.fr`)
+      - traefik.http.routers.matomo.entrypoints=websecure
+      - traefik.http.routers.matomo.tls=true
+      - traefik.http.routers.matomo.tls.certresolver=le
+      - traefik.http.services.matomo.loadbalancer.server.port=80
+
+networks:
+  edge:
+  internal:
+    internal: true
+
+volumes:
+  matomo_db:
+  matomo_app:
