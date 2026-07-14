@@ -67,6 +67,17 @@ services:
       - traefik.http.routers.matomo.tls.certresolver=le
       - traefik.http.services.matomo.loadbalancer.server.port=80
 
+  # Sert aussi l'app sur copot.fr + www.copot.fr (le domaine zap.cloud reste actif).
+  # Seules les règles de routage sont surchargées ; le reste vient du compose de base.
+  frontend:
+    labels:
+      - traefik.http.routers.copot-frontend.rule=Host(`${DOMAIN}`) || Host(`copot.fr`) || Host(`www.copot.fr`)
+      - traefik.http.routers.copot-frontend-http.rule=Host(`${DOMAIN}`) || Host(`copot.fr`) || Host(`www.copot.fr`)
+
+  backend:
+    labels:
+      - traefik.http.routers.copot-backend.rule=(Host(`${DOMAIN}`) || Host(`copot.fr`) || Host(`www.copot.fr`)) && PathPrefix(`/api`)
+
 networks:
   edge:
   internal:
