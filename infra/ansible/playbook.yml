@@ -210,6 +210,16 @@
         group: "{{ copot_deploy_user }}"
         mode: '0600'
 
+    - name: Pre-create backup log file (deploy user can't create files in /var/log)
+      ansible.builtin.file:
+        path: /var/log/copot-backup.log
+        state: touch
+        owner: "{{ copot_deploy_user }}"
+        group: "{{ copot_deploy_user }}"
+        mode: '0644'
+        modification_time: preserve
+        access_time: preserve
+
     - name: "Nightly backup cron (3-2-1: local + Backblaze B2)"
       ansible.builtin.cron:
         name: "copot nightly backup"
