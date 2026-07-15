@@ -172,19 +172,56 @@ cd backend && vendor/bin/phpunit --coverage-html coverage/
 Le déploiement cible un **VPS Ubuntu 24.04** via **Ansible** (provisioning) +
 **Docker Compose** (runtime) + **GitHub Actions** (CI/CD).
 
+**URLs de production** :
+
+| Service  | URL                        |
+|----------|----------------------------|
+| App      | https://copot.fr (+ https://www.copot.fr) |
+| Matomo   | https://matomo.copot.fr    |
+| Grafana  | https://grafana.copot.fr   |
+| Prometheus | interne uniquement (pas d'auth → jamais exposé ; tunnel SSH : `ssh -L 9090:localhost:9090 copot@<vps>`) |
+
 **Stack production** : Traefik (reverse proxy + Let's Encrypt) → frontend (nginx
 SPA) et backend (FrankenPHP). PostgreSQL + Redis en réseau interne (non publiés).
-Le SPA est buildé avec `VITE_API_URL=/api` : les requêtes same-origin sont
-routées vers le backend par Traefik (`PathPrefix(/api)`).
+Le SPA est buildé avec `VITE_API_URL=` **vide** (same-origin) : les chemins
+d'API commencent déjà par `/api` dans le code, et Traefik route `PathPrefix(/api)`
+vers le backend. Les variables d'observabilité (`VITE_MATOMO_URL`,
+`VITE_MATOMO_SITE_ID`, `VITE_SENTRY_LOADER_URL`) sont **figées au build** de
+l'image frontend (build-args, voir [deploy.yml](.github/workflows/deploy.yml)).
+
+La stack prod se compose de **deux fichiers** : [docker-compose.prod.yml](docker-compose.prod.yml)
+(app + monitoring en profil) et [docker-compose.copot-public.prod.yml](docker-compose.copot-public.prod.yml)
+(Matomo + exposition Grafana/app sur copot.fr). **Toute commande compose en prod
+doit inclure les deux `-f` et `--profile monitoring`**, sinon Matomo est supprimé
+(orphan) et les routes copot.fr sont perdues :
+
+```bash
+docker compose --env-file .env.prod \
+  -f docker-compose.prod.yml -f docker-compose.copot-public.prod.yml \
+  --profile monitoring up -d
+```
 
 ### Architecture
 
 ```
-Internet ──443──▶ Traefik ──┬─ /api ─▶ backend (FrankenPHP :80)
-                            └─ /*   ─▶ frontend (nginx :80)
+                            ┌─ copot.fr, www, zap.cloud          ─▶ frontend (nginx :80)
+Internet ──443──▶ Traefik ──┼─ (mêmes hosts) && /api             ─▶ backend (FrankenPHP :80)
+                            ├─ matomo.copot.fr                   ─▶ matomo (+ mariadb interne)
+                            └─ grafana.copot.fr                  ─▶ grafana ─▶ prometheus ─▶ backend /metrics
 Traefik : TLS auto (Let's Encrypt) + redirect HTTP→HTTPS
 backend ─▶ postgres, redis   (réseau interne uniquement)
 ```
+
+### 0. DNS (registrar → VPS)
+
+Chez le registrar (IONOS), pointer le domaine sur l'IP du VPS :
+
+```
+A   @     <ip-du-vps>     # copot.fr (supprimer l'AAAA par défaut du registrar)
+A   *     <ip-du-vps>     # wildcard : matomo., grafana., www., …
+```
+
+Traefik obtient ensuite automatiquement les certificats Let's Encrypt.
 
 ### 1. Secrets GitHub (Settings → Secrets and variables → Actions)
 
@@ -208,8 +245,15 @@ Le playbook : apt upgrade, Docker, user `copot`, **UFW (ports 22/80/443 uniqueme
 
 Tout `push` sur `main` déclenche [.github/workflows/deploy.yml](.github/workflows/deploy.yml) :
 
-1. Build des images prod (`target: prod`) → push vers `ghcr.io/<owner>/copot-{backend,frontend}:latest` (+ tag SHA)
-2. SSH sur le VPS → `compose pull` → `doctrine:migrations:migrate` → `compose up -d`
+1. Build des images prod (`target: prod`, avec les build-args d'observabilité pour
+   le frontend) → push vers `ghcr.io/<owner>/copot-{backend,frontend}:latest` (+ tag SHA)
+2. SSH sur le VPS → `git pull` → `compose pull` → `doctrine:migrations:migrate` →
+   `compose up -d` (toujours avec les deux fichiers compose + profil monitoring)
+
+> ⚠️ `IMAGE_REGISTRY` dans `.env.prod` (VPS) doit pointer sur le **même** registre
+> que celui où la CI pousse (`ghcr.io/<owner>` en minuscules), et le VPS doit être
+> `docker login` sur ce registre (PAT `read:packages`) — pour l'utilisateur `copot`
+> **et** pour root si on déploie à la main en root.
 
 Le workflow [.github/workflows/ci.yml](.github/workflows/ci.yml) (PHPStan, PHPUnit,
 lint, build frontend) reste le gate sur les PR.
