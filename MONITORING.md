@@ -21,17 +21,21 @@ copot_transactions_total 27
 docker compose --profile monitoring up -d
 ```
 
-| Service    | URL                     | Notes                                  |
-|------------|-------------------------|----------------------------------------|
-| Prometheus | http://localhost:9090   | scrute `backend:8000/metrics` (15 s)   |
-| Grafana    | http://localhost:3001   | admin / admin (par défaut, à changer)  |
+| Service    | URL (dev)               | URL (prod)                | Notes                                 |
+|------------|-------------------------|---------------------------|---------------------------------------|
+| Prometheus | http://localhost:9090   | interne (tunnel SSH)      | scrute `backend/metrics` (15 s)       |
+| Grafana    | http://localhost:3001   | https://grafana.copot.fr  | dev : admin/admin — prod : `GRAFANA_USER`/`GRAFANA_PASSWORD` (`.env.prod`) |
 
 Grafana est **provisionné automatiquement** : la datasource Prometheus et le
 dashboard *« CoPot — Vue d'ensemble »* sont chargés au démarrage
 (`monitoring/grafana/provisioning/`).
 
-> En production, `/metrics` ne doit être accessible que depuis le réseau interne
-> de monitoring (ne pas l'exposer via Traefik).
+> En production, `/metrics` n'est pas routé par Traefik (seul `/api` l'est) :
+> Prometheus le scrute via le réseau Docker interne. Prometheus lui-même n'est
+> jamais exposé publiquement (aucune auth) — accès via tunnel SSH :
+> `ssh -L 9090:localhost:9090 copot@<vps>`. Grafana, protégé par login, est
+> exposé sur https://grafana.copot.fr via
+> [docker-compose.copot-public.prod.yml](docker-compose.copot-public.prod.yml).
 
 ## 2. Erreurs — Sentry
 
@@ -39,28 +43,41 @@ Intégration **dépendance-free** via le *Loader Script* officiel de Sentry
 (front) — activée uniquement si la variable d'env est renseignée :
 
 ```bash
-# frontend/.env.local
-VITE_SENTRY_LOADER_URL=https://js.sentry-cdn.com/<clé-publique>.min.js
+# frontend/.env.local (dev) — en prod : build-arg de l'image (deploy.yml)
+VITE_SENTRY_LOADER_URL=https://js-de.sentry-cdn.com/<clé-publique>.min.js
 ```
 
-L'URL se récupère dans Sentry → **Settings → Client Keys (DSN) → Loader Script**.
-Sans cette variable, aucun script n'est chargé (inerte).
+L'URL se récupère dans Sentry → **Settings → Client Keys (DSN) → Loader Script**
+(⚠️ créer un projet **React/Browser** — un projet PHP n'a pas de Loader Script ;
+un projet en région EU utilise le domaine `js-de.sentry-cdn.com`). Sans cette
+variable, aucun script n'est chargé (inerte). La clé du loader est **publique**
+(elle vit dans le bundle client) : pas un secret.
 
 Pour le **backend** (optionnel) : `composer require sentry/sentry-symfony`, puis
 renseigner `SENTRY_DSN` dans `backend/.env.local`.
 
-## 3. Analytics — Matomo
+## 3. Analytics — Matomo (auto-hébergé)
 
-Également **dépendance-free** (snippet `_paq` injecté), activé par env :
+Également **dépendance-free** (snippet `_paq` injecté), activé par env. Le tracker
+ne se charge **qu'après consentement cookies** (RGPD, `CookieConsent.tsx`), et un
+événement métier custom est suivi : `Account / click_new_account_button`
+(helper `trackEvent()` dans `frontend/src/lib/observability.ts`).
+
+**Dev** — Matomo local via [docker-compose.matomo.yml](docker-compose.matomo.yml) :
 
 ```bash
+docker compose -f docker-compose.matomo.yml up -d    # http://localhost:8090
 # frontend/.env.local
-VITE_MATOMO_URL=https://matomo.example.com
+VITE_MATOMO_URL=http://localhost:8090
 VITE_MATOMO_SITE_ID=1
 ```
 
-Héberger Matomo : image `matomo` + une base MariaDB (hors périmètre de ce repo,
-à déployer à côté). Voir la [doc Matomo](https://matomo.org/docs/installation/).
+**Prod** — Matomo (+ MariaDB interne) est déployé par
+[docker-compose.copot-public.prod.yml](docker-compose.copot-public.prod.yml)
+derrière Traefik : **https://matomo.copot.fr** (HTTPS auto). Les variables sont
+figées au **build** de l'image frontend (build-args dans
+[deploy.yml](.github/workflows/deploy.yml)). Données persistées dans les volumes
+`matomo_db` / `matomo_app`.
 
 ## 4. Tests
 
