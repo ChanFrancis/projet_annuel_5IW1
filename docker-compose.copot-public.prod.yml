@@ -19,6 +19,8 @@ services:
       - edge
     labels:
       - traefik.enable=true
+      # Service sur 2 réseaux (edge+internal) : force Traefik à joindre l'IP du réseau edge.
+      - traefik.docker.network=copot-prod_edge
       - traefik.http.routers.grafana.rule=Host(`grafana.copot.fr`)
       - traefik.http.routers.grafana.entrypoints=websecure
       - traefik.http.routers.grafana.tls=true
@@ -61,6 +63,7 @@ services:
     networks: [edge, internal]
     labels:
       - traefik.enable=true
+      - traefik.docker.network=copot-prod_edge
       - traefik.http.routers.matomo.rule=Host(`matomo.copot.fr`)
       - traefik.http.routers.matomo.entrypoints=websecure
       - traefik.http.routers.matomo.tls=true
@@ -76,6 +79,7 @@ services:
 
   backend:
     labels:
+      - traefik.docker.network=copot-prod_edge
       - traefik.http.routers.copot-backend.rule=(Host(`${DOMAIN}`) || Host(`copot.fr`) || Host(`www.copot.fr`)) && PathPrefix(`/api`)
 
 networks:
