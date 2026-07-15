@@ -18,6 +18,10 @@ RCLONE_PATH="${RCLONE_PATH:-copot-backups}"
 KEEP_DAILY="${KEEP_DAILY:-7}"
 KEEP_WEEKLY="${KEEP_WEEKLY:-4}"
 
+# Docker compose stats the CWD; make the script independent of where it's
+# launched from (e.g. `sudo -u copot` keeps a /root CWD the user can't read).
+cd "$DEPLOY_ROOT"
+
 mkdir -p "$BACKUP_DIR"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 DUMP="$BACKUP_DIR/copot-${STAMP}.dump"
